@@ -7,7 +7,7 @@
 
 const defLineHeight = "1.4";    // Default, baseline line height
 
-const release = "0.6";          // "Semantic version" for end users
+const release = "0.5";          // "Semantic version" for end users
 document.getElementById('bridgeVersion').innerHTML = release;
 
 document.body.style.lineHeight = defLineHeight;
@@ -18,7 +18,6 @@ if (localStorage['fontWeight'] == null)
 if (localStorage['fontWeight'] === 'bold')
     document.getElementById('boldCB').checked = true;
 
-// noinspection RedundantIfStatementJS
 if (localStorage['showFSprompt'] === 'Show')
     document.getElementById('FSPromptCB').checked = true;
 else
@@ -27,8 +26,6 @@ else
 document.getElementById('leftColumn').style.fontWeight = localStorage['fontWeight'];
 document.getElementById('rightColumn').style.fontWeight = localStorage['fontWeight'];
 // document.getElementById('vocab').style.fontWeight = localStorage['fontWeight'];
-
-document.getElementById('biReaderSplash').style.display = 'block';
 
 let controlsBackground = document.querySelector('#controlsBackground');
 
@@ -52,10 +49,6 @@ document.querySelector('#closeControls').onclick = function () {
     if (speechSynthesis.pending || speechSynthesis.speaking)
         speechSynthesis.cancel();
     controlsBackground.style.display = 'none';
-};
-
-document.querySelector('#closeSplash').onclick = function () {
-    document.getElementById('biReaderSplash').style.display = 'none';
 };
 
 if (isMobileDevice()) {
@@ -107,12 +100,11 @@ function launchFullscreen(element) {
     if (isMobileDevice()) {
         if (element.requestFullscreen) {
             element.requestFullscreen();
-        // } else if (element.mozRequestFullScreen) {
-        } else if (element.getAttribute('mozRequestFullScreen')) {
+        } else if (element.mozRequestFullScreen) {
             element.mozRequestFullScreen();
-        } else if (element.getAttribute('webkitRequestFullscreen')) {
+        } else if (element.webkitRequestFullscreen) {
             element.webkitRequestFullscreen();
-        } else if (element.getAttribute('msRequestFullscreen')) {
+        } else if (element.msRequestFullscreen) {
             element.msRequestFullscreen();
         }
         // console.log('attempting landscape 1.');
@@ -149,7 +141,7 @@ let currentSpeakSpd = 1;
 let lastSpeakSpd = null;
 let sameSpeakSpd = false;
 
-document.getElementById('currentSpeakSpeed').textContent = currentSpeakSpd.toString();
+document.getElementById('currentSpeakSpeed').textContent = currentSpeakSpd;
 document.getElementById('speakSpeed').value = currentSpeakSpd;
 
 // (Next several functions) adjust numeric indicator as user moves slider, but only
@@ -163,7 +155,6 @@ document.getElementById('speakSpeed').addEventListener('input',
             speechSynthesis.cancel();
         currentSpeakSpd = document.getElementById('speakSpeed').value;
         document.getElementById('currentSpeakSpeed').textContent = currentSpeakSpd;
-        // noinspection RedundantIfStatementJS
         if (currentSpeakSpd === lastSpeakSpd)
             sameSpeakSpd = true;
         else
@@ -211,7 +202,6 @@ document.getElementById('textSize').addEventListener('input',
 // Reference: https://developer.mozilla.org/en-US/docs/Web/API/File/Using_files_from_web_applications
 
 // Reveal the <select> node when the button is clicked:
-let fileChooserModal = document.querySelector('#fileChooserModal');
 document.getElementById('libraryLoadButton').addEventListener('click',
     function () {
         document.getElementById('fileChooserModal').style.display = 'block';
@@ -220,9 +210,8 @@ document.getElementById('libraryLoadButton').addEventListener('click',
         // Clicking anywhere outside the file chooser closes it:
         document.addEventListener('click',
             function docClick(f) {
-                // if (f.target.id === 'fileChooserModal') {
-                if (f.target.getAttribute('id') === 'fileChooserModal') {
-                    document.getElementById('fileChooserModal').style.display = 'none';
+                if (f.target.id === 'fileChooserModal') {
+                    fileChooserModal.style.display = 'none';
                     document.removeEventListener('click', docClick);
                 }
             }
@@ -273,8 +262,7 @@ document.getElementById('leftFileSelect').addEventListener('change', function ()
     RFopt.disabled = true;
     RFopt.selected = true;
     RFopt.value = "";  // prevent rumored autofill of "choose one" by some browsers
-    // RFopt.style = "font-weight: bold; font-size: 125%; color: red; background-color: yellow";
-    RFopt.setAttribute("style", "font-weight: bold; font-size: 125%; color: red; background-color: yellow");
+    RFopt.style = "font-weight: bold; font-size: 125%; color: red; background-color: yellow";
     RFopt.text = "Select right-hand file:";
     rightList.appendChild(RFopt);
 
@@ -393,10 +381,10 @@ function updateLineSpacing() {
     //todo: check for "edge" cases here (e.g., less that a screenful of text):
     if (leftToRightRatio < 1)
     // Stretch left side:
-        document.getElementById('leftPara').style.lineHeight = (1.4 / leftToRightRatio).toString();
+        document.getElementById('leftPara').style.lineHeight = 1.4 / leftToRightRatio;
     else if (leftToRightRatio > 1)
     // Stretch right side:
-        document.getElementById('rightPara').style.lineHeight = (1.4 * leftToRightRatio).toString();
+        document.getElementById('rightPara').style.lineHeight = 1.4 * leftToRightRatio
 }
 
 function keepItLocal(e) {
@@ -558,13 +546,13 @@ async function lookupWord(ev) {
     getTranslation("from=fra&dest=eng&phrase=", speakStr);
 
     let speakMsg = new SpeechSynthesisUtterance(speakStr);
-    speakMsg.rate = currentSpeakSpd;
+    speakMsg.rate = currentSpeakSpd
     speechSynthesis.speak(speakMsg);
 }
 
 // todo: firefox TTS, see https://hacks.mozilla.org/2016/01/firefox-and-the-web-speech-api/
 //
-function readTextAloud(ev) {
+function readTextAloud() {
     if (wordLookedUp) {     // A long mousedown occurred, so ignore following click event
         wordLookedUp = false;
         console.log('RTA skip');
@@ -598,15 +586,6 @@ function readTextAloud(ev) {
         }
     }
 
-    // todo: Safari 11.0.3 correctly speaks the text, but does not highlight the selection.
-
-    // This code snippet works with Safari: https://stackoverflow.com/a/33195028/5025060 (but only with <input> element)
-/*    let elem = ev.target;
-    if (elem.setSelectionRange) {
-        elem.focus();
-        elem.setSelectionRange(speakRange.startOffset + 1, speakRange.endOffset - 1);
-    }*/
-
     let speakStr = speakRange.toString().trim();
     let speakMsg = new SpeechSynthesisUtterance(speakStr);
 
@@ -638,14 +617,12 @@ function readTextAloud(ev) {
 let clickables = document.getElementsByClassName('clickable');
 
 for (let elNum = 0; elNum < clickables.length; elNum++) {
-    // noinspection JSUnresolvedFunction
     clickables[elNum].addEventListener('mousedown', lookupWord, {passive: true});
     clickables[elNum].addEventListener('touchstart', lookupWord, {passive: true}); // required for tablet
 
     clickables[elNum].addEventListener('mousemove', mouseMoved, {passive: true});
     // clickables[elNum].addEventListener('touchmove', mouseMoved, {passive:true}); // tablet
 
-    // noinspection JSUnresolvedFunction
     clickables[elNum].addEventListener('click', readTextAloud, {passive: true});
 
     // clickables[elNum].addEventListener('mouseup', keepItLocal, false); // else touchscreen browser removes highlighting
@@ -685,7 +662,7 @@ request.onreadystatechange = function () { // Define event listener
         option.disabled = true;
         option.selected = true;
         option.value = "";  // prevent rumored autofill of "choose one" by some browsers
-        option.setAttribute("style", 'font-weight: bold; font-size: 125%; color: red; background-color: yellow');
+        option.style = 'font-weight: bold; font-size: 125%; color: red; background-color: yellow';
         option.text = "Select left-hand file:";
         selectList.appendChild(option);
 
@@ -705,10 +682,8 @@ request.send(null); // Send the request now
 // "...the voice list is loaded async to the page. An onvoiceschanged
 // event is fired when they are loaded":
 let voiceList = [];
-// speechSynthesis.onvoiceschanged = function () {
-function doVoices() {
-    // let ssVoices = this.getVoices();
-    let ssVoices = speechSynthesis.getVoices();
+speechSynthesis.onvoiceschanged = function () {
+    let ssVoices = this.getVoices();
     for (let voiceInd = 0; voiceInd < ssVoices.length; voiceInd++)
         voiceList[voiceInd] = ssVoices[voiceInd].name + ' (' + ssVoices[voiceInd].lang + ')';
 
@@ -718,16 +693,7 @@ function doVoices() {
         vListEl.insertAdjacentHTML("beforeend", "<li>" + listMem);
     });
     vListEl.insertAdjacentHTML("beforeend", "</ul>");
-}
-
-// Workaround for Safari, adapted from https://stackoverflow.com/a/28217250/5025060:
-//
-if ('onvoiceschanged' in speechSynthesis) {
-    // console.log('onvoiceschanged defined by browser');
-    speechSynthesis.onvoiceschanged = doVoices;
-} else {
-    doVoices();
-}
+};
 
 function getTranslation(prefix, toXlate) {
     // JSONP needed because glosbe.com does not provide CORS:
